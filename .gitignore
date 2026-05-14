@@ -9,9 +9,7 @@
 /quantdinger_vue/
 /QuantDinger-Vue-src/
 # Build artefacts are committed for Docker-only deployments
-/frontend/
-/frontend/dist/
-/frontend/dist/**
+frontend/
 
 # ========================
 # Environment & Secrets
