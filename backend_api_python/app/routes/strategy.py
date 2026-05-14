@@ -775,6 +775,36 @@ def get_trades():
         return jsonify({'code': 0, 'msg': str(e), 'data': {'trades': [], 'items': []}}), 500
 
 
+@strategy_bp.route('/strategies/dry-run-deviation', methods=['GET'])
+@login_required
+def get_dry_run_deviation():
+    """Quantify how far live fills drifted from backtest signal closes.
+
+    For every recorded trade the service rebuilds the prior closed bar (the
+    one a backtest would have used as the decision price) and computes per-
+    trade slippage / latency, plus a summary verdict.
+    """
+    try:
+        user_id = int(g.user_id)
+        strategy_id = request.args.get('id', type=int)
+        if not strategy_id:
+            return jsonify({'code': 0, 'msg': 'Missing strategy id parameter', 'data': None}), 400
+        limit = max(20, min(int(request.args.get('limit') or 200), 1000))
+
+        from app.services.dry_run_deviation import DryRunDeviationService
+        svc = DryRunDeviationService()
+        report = svc.build_report(
+            strategy_id=strategy_id,
+            user_id=user_id,
+            limit=limit,
+        )
+        return jsonify({'code': 1, 'msg': 'success', 'data': report})
+    except Exception as exc:
+        logger.error("get_dry_run_deviation failed: %s", exc)
+        logger.error(traceback.format_exc())
+        return jsonify({'code': 0, 'msg': str(exc), 'data': None}), 500
+
+
 @strategy_bp.route('/strategies/positions', methods=['GET'])
 @login_required
 def get_positions():
@@ -1997,10 +2027,11 @@ def get_strategy_logs():
                 continue
             ts = rr.get('timestamp')
             if ts is not None and hasattr(ts, 'isoformat'):
-                if getattr(ts, 'tzinfo', None) is not None:
-                    rr['timestamp'] = ts.astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S') + 'Z'
-                else:
-                    rr['timestamp'] = ts.strftime('%Y-%m-%dT%H:%M:%S') + 'Z'
+                # naive timestamps from the DB are wall-clock in the server's
+                # TZ; ``to_utc_iso`` converts them to UTC ISO with a Z suffix
+                # so the frontend can render them in the user's locale.
+                from app.utils.timeutil import to_utc_iso
+                rr['timestamp'] = to_utc_iso(ts)
             out.append(rr)
         logs = list(reversed(out))
         return jsonify({'code': 1, 'msg': 'success', 'data': logs})
