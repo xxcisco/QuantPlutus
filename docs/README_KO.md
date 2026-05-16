@@ -207,7 +207,7 @@ flowchart LR
      curl -o backend.env https://raw.githubusercontent.com/brokermr810/QuantDinger/main/backend_api_python/env.example
      docker compose -f docker-compose.ghcr.yml up -d
      ```
-     기본 이미지: `ghcr.io/brokermr810/quantdinger-{backend,frontend}:latest`. 버전 고정은 로컬 `.env`에 `IMAGE_TAG=v3.0.9`.
+     기본 이미지: `ghcr.io/brokermr810/quantdinger-{backend,frontend}:latest`. 양쪽을 동시에 고정하려면 로컬 `.env`에 `IMAGE_TAG=v3.0.9`, 한쪽만 고정하려면 `BACKEND_TAG` / `FRONTEND_TAG`.
 4. **Web:** `http://localhost:8888` · **API 헬스:** `http://localhost:5000/api/health`
 5. 프로덕션 전 기본 관리자 비밀번호 변경. `backend_api_python/.env`의 **`FRONTEND_URL`**을 실제 URL에 맞추세요.
 

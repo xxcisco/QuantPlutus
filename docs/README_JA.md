@@ -207,7 +207,7 @@ flowchart LR
      curl -o backend.env https://raw.githubusercontent.com/brokermr810/QuantDinger/main/backend_api_python/env.example
      docker compose -f docker-compose.ghcr.yml up -d
      ```
-     デフォルトイメージは `ghcr.io/brokermr810/quantdinger-{backend,frontend}:latest`。バージョン固定はローカル `.env` で `IMAGE_TAG=v3.0.9`。
+     デフォルトイメージは `ghcr.io/brokermr810/quantdinger-{backend,frontend}:latest`。両側を同時に固定するならローカル `.env` で `IMAGE_TAG=v3.0.9`、片側だけなら `BACKEND_TAG` / `FRONTEND_TAG` を設定。
 4. **Web:** `http://localhost:8888` · **API ヘルス:** `http://localhost:5000/api/health`
 5. 本番前にデフォルト管理者パスワードを変更。`backend_api_python/.env` の **`FRONTEND_URL`** を実際の URL に合わせる。
 

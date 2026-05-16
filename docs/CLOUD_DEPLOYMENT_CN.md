@@ -372,7 +372,7 @@ docker pull ghcr.io/brokermr810/quantdinger-frontend:latest
 
 - GHCR 包可见性是私有 —— 在 GitHub 上把包设为 public，或先 `docker login ghcr.io`
 - 网络封禁 GHCR —— 在项目根 `.env` 用 `FRONTEND_IMAGE` 指向国内镜像
-- `IMAGE_TAG` pin 的版本不存在 —— 回退到 `latest` 或选一个已发布的 semver tag
+- `IMAGE_TAG`(或 `BACKEND_TAG` / `FRONTEND_TAG`)pin 的版本不存在 —— 回退到 `latest` 或选一个已发布的 semver tag
 
 ### 5. 后台保存配置时报 `Read-only file system: '/app/.env'`
 

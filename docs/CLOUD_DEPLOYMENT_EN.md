@@ -372,7 +372,7 @@ Common causes:
 
 - Image visibility set to private — switch the package to public in GitHub, or `docker login ghcr.io` first
 - Network firewall blocks GHCR — set a mirror prefix via `FRONTEND_IMAGE` in project-root `.env`
-- Tag pinned by `IMAGE_TAG` no longer exists — fall back to `latest` or pick an existing semver tag
+- Tag pinned by `IMAGE_TAG` (or `BACKEND_TAG` / `FRONTEND_TAG`) no longer exists — fall back to `latest` or pick an existing semver tag
 
 ### 5. Saving settings fails with `Read-only file system: '/app/.env'`
 

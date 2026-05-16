@@ -87,11 +87,17 @@ This repo's `docker-compose.yml` (and `docker-compose.ghcr.yml`) references that
 
 ```bash
 # Project-root .env (sibling of docker-compose.yml)
+# Common: bump both sides together
 echo "IMAGE_TAG=v3.0.9" >> .env
+
+# Or pin only frontend (testing a UI hotfix against stable backend)
+# echo "FRONTEND_TAG=v3.0.9" >> .env
 
 docker compose pull frontend
 docker compose up -d frontend
 ```
+
+Resolution order: `FRONTEND_TAG` (or `BACKEND_TAG`) → `IMAGE_TAG` → `latest`.
 
 The container reads `BACKEND_URL` at start time and substitutes it into the nginx config via the official `nginx:alpine` envsubst hook, so the same image works for compose, Railway, and direct `docker run`.
 

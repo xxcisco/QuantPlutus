@@ -207,7 +207,7 @@ flowchart LR
      curl -o backend.env https://raw.githubusercontent.com/brokermr810/QuantDinger/main/backend_api_python/env.example
      docker compose -f docker-compose.ghcr.yml up -d
      ```
-     Image mặc định: `ghcr.io/brokermr810/quantdinger-{backend,frontend}:latest`. Ghim phiên bản bằng `IMAGE_TAG=v3.0.9` trong `.env` cục bộ.
+     Image mặc định: `ghcr.io/brokermr810/quantdinger-{backend,frontend}:latest`. Ghim đồng thời cả hai bằng `IMAGE_TAG=v3.0.9` trong `.env` cục bộ, hoặc ghim từng bên với `BACKEND_TAG` / `FRONTEND_TAG`.
 4. **Web:** `http://localhost:8888` · **Sức khỏe API:** `http://localhost:5000/api/health`
 5. Đổi mật khẩu quản trị mặc định trước production. Đặt **`FRONTEND_URL`** trong `backend_api_python/.env` đúng URL thực tế.
 

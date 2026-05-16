@@ -207,7 +207,7 @@ flowchart LR
      curl -o backend.env https://raw.githubusercontent.com/brokermr810/QuantDinger/main/backend_api_python/env.example
      docker compose -f docker-compose.ghcr.yml up -d
      ```
-     อิมเมจเริ่มต้น: `ghcr.io/brokermr810/quantdinger-{backend,frontend}:latest` ตรึงเวอร์ชันด้วย `IMAGE_TAG=v3.0.9` ใน `.env` ที่อยู่ในเครื่อง
+     อิมเมจเริ่มต้น: `ghcr.io/brokermr810/quantdinger-{backend,frontend}:latest` ตรึงทั้งสองด้านพร้อมกันด้วย `IMAGE_TAG=v3.0.9` ใน `.env` ภายในเครื่อง (หรือ `BACKEND_TAG` / `FRONTEND_TAG` เพื่อตรึงทีละด้าน)
 4. **เว็บ:** `http://localhost:8888` · **สุขภาพ API:** `http://localhost:5000/api/health`
 5. เปลี่ยนรหัสผู้ดูแลเริ่มต้นก่อนโปรดักชัน ตั้ง **`FRONTEND_URL`** ใน `backend_api_python/.env` ให้ตรง URL จริง
 

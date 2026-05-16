@@ -139,7 +139,11 @@ services:
   # Frontend (Nginx serving prebuilt SPA, pulled from GHCR)
   # ========================
   frontend:
-    image: ${FRONTEND_IMAGE:-ghcr.io/brokermr810/quantdinger-frontend}:${IMAGE_TAG:-latest}
+    # Tag resolution (highest precedence wins):
+    #   FRONTEND_TAG   — per-side override, decouples FE from BE
+    #   IMAGE_TAG      — unified knob, sets both FE and BE (BE only relevant in ghcr.yml)
+    #   latest         — fallback
+    image: ${FRONTEND_IMAGE:-ghcr.io/brokermr810/quantdinger-frontend}:${FRONTEND_TAG:-${IMAGE_TAG:-latest}}
     container_name: quantdinger-frontend
     restart: unless-stopped
     ports:
