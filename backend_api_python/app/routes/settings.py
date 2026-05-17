@@ -703,10 +703,10 @@ CONFIG_SCHEMA = {
                 'key': 'CCXT_DEFAULT_EXCHANGE',
                 'label': 'Default Crypto Exchange',
                 'type': 'text',
-                'default': 'coinbase',
+                'default': 'binance',
                 'link': 'https://github.com/ccxt/ccxt#supported-cryptocurrency-exchange-markets',
                 'link_text': 'settings.link.supportedExchanges',
-                'description': 'Default exchange for crypto data (binance, coinbase, okx, etc.)'
+                'description': 'Default exchange for crypto market data (binance recommended for BTC/USDT; coinbase uses USD pairs)'
             },
             {
                 'key': 'FINNHUB_API_KEY',
