@@ -274,6 +274,15 @@ def get_strategy_template(key):
     return jsonify({'code': 0, 'msg': 'Template not found'}), 404
 
 
+@strategy_bp.route('/bots/grid-script', methods=['GET'])
+@login_required
+def get_grid_bot_script():
+    """Canonical grid bot ScriptStrategy source (adaptive bounds + waterfall aware)."""
+    from app.services.bot_scripts.grid_template import build_grid_bot_script
+
+    return jsonify({'code': 1, 'msg': 'success', 'data': {'script': build_grid_bot_script()}})
+
+
 # Local mode: avoid heavy initialization during module import.
 # Instantiate services lazily on first use to keep startup clean.
 _strategy_service = None
@@ -933,7 +942,7 @@ def _build_strategy_equity_curve(user_id: int, strategy_id: int):
         cur = db.cursor()
         cur.execute(
             """
-            SELECT created_at, profit
+            SELECT created_at, profit, commission
             FROM qd_strategy_trades
             WHERE strategy_id = ?
             ORDER BY created_at ASC
@@ -956,7 +965,8 @@ def _build_strategy_equity_curve(user_id: int, strategy_id: int):
     curve = []
     for r in rows:
         try:
-            equity += float(r.get('profit') or 0)
+            # Net equity step: gross trade P&L minus exchange-synced fee.
+            equity += float(r.get('profit') or 0) - float(r.get('commission') or 0)
         except Exception:
             pass
         created_at = r.get('created_at')
@@ -1717,7 +1727,9 @@ def ai_generate_strategy():
                 "You are an expert quantitative trading advisor. The user wants to create an automated trading bot.\n"
                 "Based on their description AND the real-time market data provided, recommend one of the four bot types and provide optimal parameters.\n\n"
                 "Available bot types and their parameter schemas:\n"
-                "1. grid - Grid Trading: {upperPrice: number, lowerPrice: number, gridCount: int(5-100), amountPerGrid: number, gridMode: 'arithmetic'|'geometric'}\n"
+                "1. grid - Grid Trading: {upperPrice, lowerPrice, gridCount: int(5-100), amountPerGrid, gridMode: 'arithmetic'|'geometric', "
+                "gridDirection: 'long'|'short'|'neutral', adaptiveBounds: true, adaptiveAtrMult: 2.0, waterfallProtection: true, waterfallDropPct: 0.03; "
+                "martingale: waterfallProtection: true, waterfallDropPct: 0.04}\n"
                 "2. martingale - Martingale: {initialAmount: number, multiplier: number(1.1-3.0), maxLayers: int(2-10), priceDropPct: number(1-20), takeProfitPct: number(1-50)}\n"
                 "3. trend - Trend Following: {maPeriod: int(5-200), maType: 'SMA'|'EMA', confirmBars: int(1-5), positionPct: number(10-100), direction: 'long'|'short'|'both'}\n"
                 "4. dca - DCA (Dollar-Cost Averaging): {amountEach: number, frequency: 'every_bar'|'hourly'|'4h'|'daily'|'weekly'|'biweekly'|'monthly', totalBudget: number, dipBuyEnabled: bool, dipThreshold: number(1-30)}\n\n"
@@ -2124,15 +2136,13 @@ def get_strategy_logs():
             if msg.startswith('tick price=') or msg.startswith('tick price '):
                 continue
             ts = rr.get('timestamp')
-            if ts is not None and hasattr(ts, 'isoformat'):
-                # naive timestamps from the DB are wall-clock in the server's
-                # TZ; ``to_utc_iso`` converts them to UTC ISO with a Z suffix
-                # so the frontend can render them in the user's locale.
+            if ts is not None:
                 from app.utils.timeutil import to_utc_iso
-                rr['timestamp'] = to_utc_iso(ts)
+                iso = to_utc_iso(ts)
+                rr['timestamp'] = iso if iso is not None else str(ts)
             out.append(rr)
-        logs = list(reversed(out))
-        return jsonify({'code': 1, 'msg': 'success', 'data': logs})
+        # Already ORDER BY id DESC — newest first for the UI log panel.
+        return jsonify({'code': 1, 'msg': 'success', 'data': out})
     except Exception as e:
         if PgUndefinedTable is not None and isinstance(e, PgUndefinedTable):
             return jsonify({'code': 1, 'msg': 'success', 'data': []})

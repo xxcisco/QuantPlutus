@@ -46,7 +46,7 @@
 
   <p style="margin-top: 1.45rem; margin-bottom: 10px;">
     <a href="../LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square&logo=apache" alt="License"></a>
-    <img src="https://img.shields.io/badge/Version-3.0.5-orange?style=flat-square" alt="Version">
+    <img src="https://img.shields.io/badge/Version-3.0.9-orange?style=flat-square" alt="Version">
     <img src="https://img.shields.io/badge/Python-3.10%2B%20%7C%20Docker%203.12-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python">
     <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker">
     <img src="https://img.shields.io/github/stars/brokermr810/QuantDinger?style=flat-square&logo=github" alt="Stars">
@@ -70,7 +70,7 @@
 
 ## เริ่มต้นอย่างรวดเร็ว
 
-**สิ่งที่ต้องมี:** [Docker](https://docs.docker.com/get-docker/) + Compose และ **Git** **ไม่ต้องใช้ Node.js** (UI สำเร็จรูปใน `frontend/dist`)
+**สิ่งที่ต้องมี:** [Docker](https://docs.docker.com/get-docker/) + Compose และ **Git** **ไม่ต้องใช้ Node.js** (อิมเมจฟรอนต์เอนด์ถูกดึงจาก GHCR)
 
 ### macOS / Linux
 
@@ -108,13 +108,14 @@ docker-compose up -d --build
 | ที่เก็บ | เนื้อหา |
 |---------|---------|
 | **[QuantDinger](https://github.com/brokermr810/QuantDinger)** (repo นี้) | แบ็กเอนด์ Compose เอกสาร Web สำเร็จรูป |
-| **[QuantDinger-Vue](https://github.com/brokermr810/QuantDinger-Vue)** | **ซอร์สเว็บฟรอนต์** (Vue) — รัน `npm run build` แล้วแทนที่ `frontend/dist` |
+| **[QuantDinger-Vue](https://github.com/brokermr810/QuantDinger-Vue)** | **ซอร์สเว็บฟรอนต์** (Vue) — แท็ก `v*` จะเผยแพร่ `ghcr.io/brokermr810/quantdinger-frontend` อัตโนมัติ |
 | **[QuantDinger-Mobile](https://github.com/brokermr810/QuantDinger-Mobile)** | **ไคลเอนต์มือถือ** (โอเพนซอร์ส) |
 
 <h2 id="mcp--agent-gateway">MCP / Agent Gateway</h2>
 
 สำหรับ **Cursor / Claude Code / Codex** มี **Model Context Protocol (MCP)** และ **Agent Gateway** (`/api/agent/v1`) รายละเอียดเชิงลึกอยู่ในเอกสารภาษาอังกฤษ:
 
+- **คู่มือเชื่อมต่อ:** [**MCP_SETUP.md**](agent/MCP_SETUP.md) — โฮสต์ / Self-hosted, stdio ในเครื่อง, HTTP ระยะไกล, Claude Code CLI รวมในที่เดียว
 - [AGENT_QUICKSTART.md](agent/AGENT_QUICKSTART.md) · [AI_INTEGRATION_DESIGN.md](agent/AI_INTEGRATION_DESIGN.md) · [agent-openapi.json](agent/agent-openapi.json)
 - เซิร์ฟเวอร์ MCP: [`../mcp_server/README.md`](../mcp_server/README.md) · PyPI [`quantdinger-mcp`](https://pypi.org/project/quantdinger-mcp/)
 
@@ -200,6 +201,14 @@ flowchart LR
 1. โคลนแล้ว `cp backend_api_python/env.example backend_api_python/.env`
 2. **ต้องตั้ง `SECRET_KEY`** (ถ้าเป็นค่า placeholder แบ็กเอนด์จะไม่เริ่ม) Linux/macOS: `./scripts/generate-secret-key.sh`
 3. `docker-compose up -d --build`
+   - **ทางเลือก (ไม่ต้อง clone repo)**: ดึงอิมเมจ backend + frontend สำเร็จรูปแบบหลายสถาปัตยกรรม (amd64/arm64) จาก GHCR โดยตรง:
+     ```bash
+     curl -O https://raw.githubusercontent.com/brokermr810/QuantDinger/main/docker-compose.ghcr.yml
+     curl -o backend.env https://raw.githubusercontent.com/brokermr810/QuantDinger/main/backend_api_python/env.example
+     docker compose -f docker-compose.ghcr.yml up -d
+     ```
+     อิมเมจเริ่มต้น: `ghcr.io/brokermr810/quantdinger-{backend,frontend}:latest` ตรึงทั้งสองด้านพร้อมกันด้วย `IMAGE_TAG=v3.0.9` ใน `.env` ภายในเครื่อง (หรือ `BACKEND_TAG` / `FRONTEND_TAG` เพื่อตรึงทีละด้าน)
+   - **พัฒนาฟรอนต์เอนด์ในเครื่อง**: โคลน `QuantDinger-Vue` ไปยัง `./QuantDinger-Vue/` (gitignore แล้ว) แล้วรัน `docker compose up -d --build` รายละเอียดดู [README ภาษาอังกฤษ](../README.md#alternative-build-the-frontend-from-vue-source)
 4. **เว็บ:** `http://localhost:8888` · **สุขภาพ API:** `http://localhost:5000/api/health`
 5. เปลี่ยนรหัสผู้ดูแลเริ่มต้นก่อนโปรดักชัน ตั้ง **`FRONTEND_URL`** ใน `backend_api_python/.env` ให้ตรง URL จริง
 

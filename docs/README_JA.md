@@ -46,7 +46,7 @@
 
   <p style="margin-top: 1.45rem; margin-bottom: 10px;">
     <a href="../LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square&logo=apache" alt="License"></a>
-    <img src="https://img.shields.io/badge/Version-3.0.5-orange?style=flat-square" alt="Version">
+    <img src="https://img.shields.io/badge/Version-3.0.9-orange?style=flat-square" alt="Version">
     <img src="https://img.shields.io/badge/Python-3.10%2B%20%7C%20Docker%203.12-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python">
     <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker">
     <img src="https://img.shields.io/github/stars/brokermr810/QuantDinger?style=flat-square&logo=github" alt="Stars">
@@ -70,7 +70,7 @@
 
 ## クイックスタート
 
-**前提:** [Docker](https://docs.docker.com/get-docker/) + Compose、**Git**。**Node.js は不要**（`frontend/dist` にビルド済み UI 同梱）。
+**前提:** [Docker](https://docs.docker.com/get-docker/) + Compose、**Git**。**Node.js は不要**（フロントエンドのイメージは GHCR から取得）。
 
 ### macOS / Linux
 
@@ -108,13 +108,14 @@ Git for Windows の Bash なら、上記 macOS/Linux の 1 行コマンドが使
 | リポジトリ | 内容 |
 |------------|------|
 | **[QuantDinger](https://github.com/brokermr810/QuantDinger)**（本倉庫） | バックエンド、Compose、ドキュメント、プリビルド Web |
-| **[QuantDinger-Vue](https://github.com/brokermr810/QuantDinger-Vue)** | **Web フロントソース**（Vue）— `npm run build` で `frontend/dist` を差し替え |
+| **[QuantDinger-Vue](https://github.com/brokermr810/QuantDinger-Vue)** | **Web フロントソース**（Vue）— `v*` タグで `ghcr.io/brokermr810/quantdinger-frontend` を自動発行 |
 | **[QuantDinger-Mobile](https://github.com/brokermr810/QuantDinger-Mobile)** | **モバイルクライアント**（オープンソース） |
 
 <h2 id="mcp--agent-ゲートウェイ">MCP / Agent ゲートウェイ</h2>
 
 **Cursor / Claude Code / Codex** など向けに **Model Context Protocol（MCP）** と **Agent Gateway**（`/api/agent/v1`）を提供。詳細は英語ドキュメントが一次情報です：
 
+- **接続レシピ:** [**MCP_SETUP.md**](agent/MCP_SETUP.md) — ホスト版 / セルフホスト、ローカル stdio、リモート HTTP、Claude Code CLI、すべてここに集約。
 - [AGENT_QUICKSTART.md](agent/AGENT_QUICKSTART.md) · [AI_INTEGRATION_DESIGN.md](agent/AI_INTEGRATION_DESIGN.md) · [agent-openapi.json](agent/agent-openapi.json)
 - MCP サーバー: [`../mcp_server/README.md`](../mcp_server/README.md) · PyPI [`quantdinger-mcp`](https://pypi.org/project/quantdinger-mcp/)
 
@@ -200,6 +201,14 @@ flowchart LR
 1. リポジトリをクローンし、`cp backend_api_python/env.example backend_api_python/.env`
 2. **`SECRET_KEY` を必ず設定**（プレースホルダのままではバックエンドが起動しません）。Linux/macOS: `./scripts/generate-secret-key.sh`
 3. `docker-compose up -d --build`
+   - **代替（リポジトリ不要）**：プリビルド多架構（amd64/arm64）の backend + frontend を GHCR から直接プルする場合：
+     ```bash
+     curl -O https://raw.githubusercontent.com/brokermr810/QuantDinger/main/docker-compose.ghcr.yml
+     curl -o backend.env https://raw.githubusercontent.com/brokermr810/QuantDinger/main/backend_api_python/env.example
+     docker compose -f docker-compose.ghcr.yml up -d
+     ```
+     デフォルトイメージは `ghcr.io/brokermr810/quantdinger-{backend,frontend}:latest`。両側を同時に固定するならローカル `.env` で `IMAGE_TAG=v3.0.9`、片側だけなら `BACKEND_TAG` / `FRONTEND_TAG` を設定。
+   - **フロントエンドのローカル開発**: `QuantDinger-Vue` を `./QuantDinger-Vue/` (gitignore 済) にクローンして `docker compose up -d --build`。詳細は[英語 README](../README.md#alternative-build-the-frontend-from-vue-source)。
 4. **Web:** `http://localhost:8888` · **API ヘルス:** `http://localhost:5000/api/health`
 5. 本番前にデフォルト管理者パスワードを変更。`backend_api_python/.env` の **`FRONTEND_URL`** を実際の URL に合わせる。
 

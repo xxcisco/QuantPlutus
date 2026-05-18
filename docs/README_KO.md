@@ -46,7 +46,7 @@
 
   <p style="margin-top: 1.45rem; margin-bottom: 10px;">
     <a href="../LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square&logo=apache" alt="License"></a>
-    <img src="https://img.shields.io/badge/Version-3.0.5-orange?style=flat-square" alt="Version">
+    <img src="https://img.shields.io/badge/Version-3.0.9-orange?style=flat-square" alt="Version">
     <img src="https://img.shields.io/badge/Python-3.10%2B%20%7C%20Docker%203.12-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python">
     <img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker">
     <img src="https://img.shields.io/github/stars/brokermr810/QuantDinger?style=flat-square&logo=github" alt="Stars">
@@ -70,7 +70,7 @@
 
 ## 빠른 시작
 
-**필요:** [Docker](https://docs.docker.com/get-docker/) + Compose, **Git**. **Node.js 불필요**(`frontend/dist`에 빌드된 UI 포함).
+**필요:** [Docker](https://docs.docker.com/get-docker/) + Compose, **Git**. **Node.js 불필요**(프론트엔드 이미지는 GHCR에서 가져옴).
 
 ### macOS / Linux
 
@@ -108,13 +108,14 @@ Git for Windows Bash에서는 위 macOS/Linux 한 줄 명령을 그대로 사용
 | 저장소 | 내용 |
 |--------|------|
 | **[QuantDinger](https://github.com/brokermr810/QuantDinger)** (본 저장소) | 백엔드, Compose, 문서, 프리빌드 Web |
-| **[QuantDinger-Vue](https://github.com/brokermr810/QuantDinger-Vue)** | **Web 프론트 소스**(Vue) — `npm run build`로 `frontend/dist` 교체 |
+| **[QuantDinger-Vue](https://github.com/brokermr810/QuantDinger-Vue)** | **Web 프론트 소스**(Vue) — `v*` 태그가 `ghcr.io/brokermr810/quantdinger-frontend`를 자동 발행 |
 | **[QuantDinger-Mobile](https://github.com/brokermr810/QuantDinger-Mobile)** | **모바일 클라이언트**(오픈소스) |
 
 <h2 id="mcp--agent-게이트웨이">MCP / Agent 게이트웨이</h2>
 
 **Cursor / Claude Code / Codex** 등을 위한 **Model Context Protocol(MCP)** 및 **Agent Gateway**(`/api/agent/v1`). 상세는 영어 문서가 기준입니다:
 
+- **연결 가이드:** [**MCP_SETUP.md**](agent/MCP_SETUP.md) — 호스팅 / 자체 호스팅, 로컬 stdio, 원격 HTTP, Claude Code CLI를 모두 한 페이지에 정리.
 - [AGENT_QUICKSTART.md](agent/AGENT_QUICKSTART.md) · [AI_INTEGRATION_DESIGN.md](agent/AI_INTEGRATION_DESIGN.md) · [agent-openapi.json](agent/agent-openapi.json)
 - MCP 서버: [`../mcp_server/README.md`](../mcp_server/README.md) · PyPI [`quantdinger-mcp`](https://pypi.org/project/quantdinger-mcp/)
 
@@ -200,6 +201,14 @@ flowchart LR
 1. 클론 후 `cp backend_api_python/env.example backend_api_python/.env`
 2. **`SECRET_KEY` 필수 설정**(플레이스홀더면 백엔드가 시작되지 않음). Linux/macOS: `./scripts/generate-secret-key.sh`
 3. `docker-compose up -d --build`
+   - **대안 (저장소 불필요)**: backend + frontend 모두 GHCR의 프리빌드 멀티 아키텍처(amd64/arm64) 이미지를 직접 풀:
+     ```bash
+     curl -O https://raw.githubusercontent.com/brokermr810/QuantDinger/main/docker-compose.ghcr.yml
+     curl -o backend.env https://raw.githubusercontent.com/brokermr810/QuantDinger/main/backend_api_python/env.example
+     docker compose -f docker-compose.ghcr.yml up -d
+     ```
+     기본 이미지: `ghcr.io/brokermr810/quantdinger-{backend,frontend}:latest`. 양쪽을 동시에 고정하려면 로컬 `.env`에 `IMAGE_TAG=v3.0.9`, 한쪽만 고정하려면 `BACKEND_TAG` / `FRONTEND_TAG`.
+   - **프론트엔드 로컬 개발**: `QuantDinger-Vue`를 `./QuantDinger-Vue/`(gitignore)에 클론 후 `docker compose up -d --build`. 자세한 내용은 [영어 README](../README.md#alternative-build-the-frontend-from-vue-source) 참고.
 4. **Web:** `http://localhost:8888` · **API 헬스:** `http://localhost:5000/api/health`
 5. 프로덕션 전 기본 관리자 비밀번호 변경. `backend_api_python/.env`의 **`FRONTEND_URL`**을 실제 URL에 맞추세요.
 
