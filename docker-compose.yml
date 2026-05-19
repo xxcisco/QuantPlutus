@@ -152,7 +152,7 @@ services:
     image: ${FRONTEND_IMAGE:-ghcr.io/brokermr810/quantdinger-frontend}:${FRONTEND_TAG:-${IMAGE_TAG:-latest}}
     pull_policy: always
     build:
-      context: ${FRONTEND_SRC_PATH:-./QuantDinger-Vue}
+      context: ${FRONTEND_SRC_PATH:-./QuantPlutus-Vue}
       dockerfile: Dockerfile
     container_name: quantdinger-frontend
     restart: unless-stopped
