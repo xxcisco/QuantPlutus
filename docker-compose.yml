@@ -140,10 +140,11 @@ services:
   # ========================
   # Default behaviour: pull the prebuilt multi-arch image from GHCR.
   # Local iteration: clone QuantDinger-Vue into `./QuantDinger-Vue/`
-  # (gitignored) and run `docker compose up --build` — Compose then
-  # builds from that source tree and tags the result with the same
-  # image name. The build context is evaluated lazily, so users who
-  # only pull never need the `./QuantDinger-Vue/` directory to exist.
+  # (gitignored) and layer the build override on top:
+  #   docker compose -f docker-compose.yml -f docker-compose.build.yml up --build
+  # The `build:` block lives in docker-compose.build.yml so users who only
+  # pull never need the `./QuantDinger-Vue/` directory to exist (Compose
+  # validates build context paths eagerly when `build:` is present).
   frontend:
     # Tag resolution (highest precedence wins):
     #   FRONTEND_TAG   — per-side override, decouples FE from BE
