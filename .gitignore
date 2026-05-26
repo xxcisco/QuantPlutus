@@ -24,6 +24,7 @@ backend_api_python/.env
 # ========================
 .idea/
 .vscode/
+agent-tools/
 *.swp
 *.swo
 *~
