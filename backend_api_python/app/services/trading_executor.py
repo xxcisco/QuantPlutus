@@ -923,6 +923,12 @@ class TradingExecutor:
         logger.info(f"Strategy {strategy_id} script closed bar {closed_ts} -> {len(pending)} signal(s)")
         return pending, closed_ts
 
+    def _flush_ctx_logs(self,strategy_id,ctx):
+        """Flush ctx user defined logs to strategy log table."""
+        logs = ctx.flush_logs()
+        for log in logs:
+            append_strategy_log(strategy_id, "info", log)
+
     def _script_evaluate_in_progress_bar(
         self,
         df: pd.DataFrame,
@@ -971,6 +977,7 @@ class TradingExecutor:
         )
         try:
             on_bar(ctx, bar)
+            self._flush_ctx_logs(strategy_id, ctx)
         except Exception as e:
             logger.error(f"Strategy {strategy_id} script in-progress on_bar error: {e}")
             logger.error(traceback.format_exc())
