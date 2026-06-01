@@ -116,6 +116,29 @@ def _strip_legacy_risk_pct_basis(trading_config: Dict[str, Any]) -> Dict[str, An
     return tc
 
 
+def _apply_risk_flat_from_indicator_code(
+    trading_config: Dict[str, Any],
+    indicator_config: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    """
+    When indicator code declares @strategy risk keys, persist matching flat
+    trading_config.*_pct fields (percent units) so DB/UI/backtest-center stay
+    aligned with the same semantics as live runtime code parsing.
+    """
+    ic = indicator_config if isinstance(indicator_config, dict) else {}
+    code = ic.get("indicator_code") or ""
+    if not str(code).strip():
+        return dict(trading_config or {})
+    from app.services.indicator_params import StrategyConfigParser
+
+    flat = StrategyConfigParser.to_trading_config_risk_flat(str(code))
+    if not flat:
+        return dict(trading_config or {})
+    tc = dict(trading_config or {})
+    tc.update(flat)
+    return tc
+
+
 # Note: broker / market / market_type / trade_direction / bot_type compatibility
 # rules used to live in this file as scattered if-blocks plus a local
 # _enforce_long_only_for_stock_brokers helper. They have been moved into
@@ -904,12 +927,20 @@ class StrategyService:
                 self._display_item('amountPerGrid', 'trading-bot.grid.amountPerGrid', self._to_float(params.get('amountPerGrid'), 0.0), 'usdt'),
                 self._display_item('gridMode', 'trading-bot.grid.mode', params.get('gridMode') or 'arithmetic', 'enum', f"trading-bot.grid.{params.get('gridMode') or 'arithmetic'}"),
                 self._display_item('gridDirection', 'trading-bot.grid.direction', params.get('gridDirection') or 'neutral', 'enum', f"trading-bot.grid.{params.get('gridDirection') or 'neutral'}"),
+                self._display_item('initialPositionPct', 'trading-bot.grid.initialPositionPct', self._to_float(params.get('initialPositionPct'), 0.0), 'percent'),
+                self._display_item('boundaryAction', 'trading-bot.grid.boundaryAction', params.get('boundaryAction') or 'pause', 'enum', {
+                    'pause': 'trading-bot.grid.boundaryPause',
+                    'stop_loss': 'trading-bot.grid.boundaryStopLoss',
+                    'hold': 'trading-bot.grid.boundaryHold',
+                }.get(params.get('boundaryAction') or 'pause', 'trading-bot.grid.boundaryPause')),
+            ]
+            display['strategy_params'].extend([
                 self._display_item('orderMode', 'trading-bot.grid.orderType', params.get('orderMode') or 'maker', 'enum', 'trading-bot.grid.limitOrder' if (params.get('orderMode') or 'maker') == 'maker' else 'trading-bot.grid.marketOrder'),
                 self._display_item('adaptiveBounds', 'trading-bot.grid.adaptiveBounds', bool(params.get('adaptiveBounds', True)), 'boolean'),
                 self._display_item('adaptiveAtrMult', 'trading-bot.grid.adaptiveAtrMult', self._to_float(params.get('adaptiveAtrMult'), 2.0), 'number'),
                 self._display_item('waterfallProtection', 'trading-bot.grid.waterfallProtection', bool(params.get('waterfallProtection', True)), 'boolean'),
                 self._display_item('waterfallDropPct', 'trading-bot.grid.waterfallDropPct', self._to_float(params.get('waterfallDropPct'), 0.03) * 100, 'percent'),
-            ]
+            ])
         elif bot_type == 'trend':
             direction = params.get('direction') or 'long'
             direction_key = {
@@ -1105,9 +1136,21 @@ class StrategyService:
         notification_config = payload.get('notification_config') or {}
 
         indicator_config = payload.get('indicator_config') or {}
+        if strategy_type == 'IndicatorStrategy':
+            from app.services.indicator_workspace import link_indicator_config
+            indicator_config = link_indicator_config(
+                int(user_id or 1),
+                indicator_config,
+                auto_save=True,
+            )
+            payload['indicator_config'] = indicator_config
         trading_config = _strip_legacy_risk_pct_basis(
             _apply_default_strict_mode(payload.get('trading_config') or {})
         )
+        if strategy_type == 'IndicatorStrategy':
+            trading_config = _apply_risk_flat_from_indicator_code(
+                trading_config, indicator_config
+            )
         from app.services.exchange_execution import coalesce_exchange_config_from_payload, resolve_exchange_config
 
         exchange_config = coalesce_exchange_config_from_payload(payload)
@@ -1452,6 +1495,11 @@ class StrategyService:
             trading_config = merged_tc
         else:
             trading_config = existing_tc
+
+        if (existing.get('strategy_type') or payload.get('strategy_type') or 'IndicatorStrategy') == 'IndicatorStrategy':
+            trading_config = _apply_risk_flat_from_indicator_code(
+                trading_config, indicator_config
+            )
 
         # When credential_id is present, strip raw API keys to avoid
         # storing secrets in the strategy record — they live in qd_exchange_credentials.
